@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feliz Dia dos Namorados 💕</title>
+
+  <!-- Google Fonts: Playfair Display (títulos elegantes) + Inter (corpo limpo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       TOKENS DE DESIGN
+       ============================================================ */
+    :root {
+      --bg:        #D1D8EC;
+      --text:      #54373A;
+      --red:       #AF373C;
+      --red-soft:  rgba(175, 55, 60, 0.08);
+      --white:     #FDFBF7;
+      --overlay:   rgba(83, 55, 58, 0.55);
+
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+
+      --radius: 14px;
+      --ease:   cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ============================================================
+       RESET
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    img { display: block; width: 100%; }
+
+    /* ============================================================
+       TELA DE BOAS-VINDAS (SPLASH)
+       ============================================================ */
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--text); /* bordeaux escuro como cortina */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      text-align: center;
+      padding: 2rem;
+      transition: opacity 0.9s var(--ease), visibility 0.9s;
+    }
+    #splash.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .splash__heart {
+      font-size: 3.5rem;
+      animation: pulse-big 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse-big {
+      0%, 100% { transform: scale(1);    }
+      50%       { transform: scale(1.15); }
+    }
+
+    .splash__title {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 6vw, 2.8rem);
+      font-weight: 400;
+      font-style: italic;
+      color: var(--white);
+      line-height: 1.25;
+    }
+
+    .splash__sub {
+      font-size: 0.85rem;
+      color: rgba(253,251,247,0.55);
+      letter-spacing: 0.08em;
+    }
+
+    .splash__btn {
+      margin-top: 0.5rem;
+      padding: 0.9rem 2.4rem;
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      border-radius: 50px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+    }
+    .splash__btn:hover,
+    .splash__btn:focus-visible {
+      transform: scale(1.04);
+      box-shadow: 0 8px 28px rgba(175,55,60,0.45);
+      outline: none;
+    }
+
+    /* ============================================================
+       CORAÇÕES FLUTUANTES (fundo animado)
+       Gerados via JS, posicionados como fixed para cobrir toda a página
+       ============================================================ */
+    #hearts-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .fheart {
+      position: absolute;
+      bottom: -60px;
+      color: var(--red);
+      opacity: 0;
+      animation: float-up linear infinite;
+      user-select: none;
+      line-height: 1;
+    }
+    @keyframes float-up {
+      0%   { transform: translateY(0)   rotate(0deg);   opacity: 0;   }
+      10%  { opacity: 0.18; }
+      90%  { opacity: 0.12; }
+      100% { transform: translateY(-110vh) rotate(25deg); opacity: 0; }
+    }
+
+    /* ============================================================
+       BOTÃO FLUTUANTE DE ÁUDIO
+       ============================================================ */
+    #audio-btn {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 1000;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--red);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 18px rgba(175,55,60,0.4);
+      transition: transform 0.2s var(--ease);
+      /* Oculto até o splash ser dispensado */
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s, transform 0.2s var(--ease);
+    }
+    #audio-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #audio-btn:hover { transform: scale(1.1); }
+    #audio-btn svg   { width: 22px; height: 22px; fill: var(--white); }
+
+    /* ============================================================
+       SCROLL REVEAL
+       ============================================================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(36px);
+      transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* ============================================================
+       CONTEÚDO PRINCIPAL — wrapper acima dos corações
+       ============================================================ */
+    main { position: relative; z-index: 1; }
+
+    /* ============================================================
+       HERO SECTION
+       ============================================================ */
+    .hero {
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5rem 1.5rem 4rem;
+    }
+
+    .hero__eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 1.2rem;
+    }
+
+    .hero__title {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 9vw, 5.5rem);
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 0.6rem;
+    }
+    .hero__title em {
+      font-style: italic;
+      color: var(--red);
+    }
+
+    .hero__sub {
+      font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+      font-weight: 300;
+      color: var(--text);
+      opacity: 0.7;
+      margin-bottom: 1rem;
+    }
+
+    /* ============================================================
+       SEÇÕES DE FOTOS — título padrão
+       ============================================================ */
+    .section {
+      padding: 5rem 1.25rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section__header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .section__eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 0.75rem;
+    }
+    .section__title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 400;
+      font-style: italic;
+      line-height: 1.2;
+      color: var(--text);
+    }
+    .section__divider {
+      width: 40px;
+      height: 2px;
+      background: var(--red);
+      opacity: 0.4;
+      margin: 1.2rem auto 0;
+      border-radius: 2px;
+    }
+
+    /* ============================================================
+       GRID DE VIAGENS (3 fotos)
+       Mobile: coluna única  |  ≥600px: 3 colunas
+       ============================================================ */
+    .grid-viagens {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+    @media (min-width: 600px) {
+      .grid-viagens {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* ============================================================
+       GRID ROLÊS (2 fotos)
+       Mobile: coluna única  |  ≥480px: 2 colunas iguais
+       ============================================================ */
+    .grid-roles {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+    @media (min-width: 480px) {
+      .grid-roles {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Cartão de foto — compartilhado */
+    .photo-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 3px 20px rgba(83,55,58,0.1);
+      transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+    }
+    .photo-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 36px rgba(83,55,58,0.16);
+    }
+
+    /*
+      ================================================================
+      IMAGENS — onde colocar as suas fotos
+      Cada <img> tem um src com nome descritivo.
+      Basta colocar os arquivos de imagem na mesma pasta do index.html
+      com os nomes correspondentes, ou trocar pelo caminho correto.
+      ================================================================
+    */
+    .photo-card__img {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+
+    .photo-card__caption {
+      padding: 0.9rem 1rem 1rem;
+    }
+    .photo-card__caption p {
+      font-size: 0.82rem;
+      color: var(--text);
+      opacity: 0.75;
+      font-weight: 300;
+      line-height: 1.45;
+    }
+    .photo-card__caption strong {
+      display: block;
+      font-weight: 500;
+      font-size: 0.88rem;
+      margin-bottom: 0.2rem;
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ============================================================
+       SEÇÃO FINAL — FOTO DO BEIJO (largura total no mobile)
+       ============================================================ */
+    .kiss-section {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    /*
+      ================================================================
+      FOTO DO BEIJO NOS LENÇÓIS
+      Esta imagem ocupa a largura total da tela no mobile.
+      Troque o src pelo arquivo da sua foto real.
+      ================================================================
+    */
+    .kiss-section__img {
+      width: 100%;
+      max-height: 80svh;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    .kiss-section__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(83,55,58,0.65) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       LETRA DA MÚSICA — rodapé
+       ============================================================ */
+    .lyrics-section {
+      position: relative;
+      z-index: 1;
+      background: var(--text);
+      color: var(--white);
+      text-align: center;
+      padding: 5rem 1.5rem 6rem;
+    }
+
+    .lyrics-section__label {
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(253,251,247,0.4);
+      margin-bottom: 2rem;
+    }
+
+    .lyrics-section__quote {
+      font-family: var(--font-display);
+      font-size: clamp(1.25rem, 4.5vw, 2rem);
+      font-weight: 400;
+      font-style: italic;
+      line-height: 1.7;
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+      color: rgba(253,251,247,0.92);
+    }
+
+    .lyrics-section__heart {
+      font-size: 1.5rem;
+      color: var(--red);
+      animation: pulse-big 2s ease-in-out infinite;
+      display: block;
+    }
+
+    .lyrics-section__artist {
+      margin-top: 1rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(253,251,247,0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       ÁUDIO — adicione o arquivo musica.mp3 na mesma pasta
+       ============================================================ -->
+  <audio id="audio" src="musica.mp3" loop preload="none"></audio>
+
+  <!-- ============================================================
+       TELA DE BOAS-VINDAS (SPLASH)
+       ============================================================ -->
+  <div id="splash" role="dialog" aria-modal="true" aria-label="Tela de boas-vindas">
+    <div class="splash__heart" aria-hidden="true">❤️</div>
+    <h1 class="splash__title">Tem uma surpresa<br>esperando por você</h1>
+    <p class="splash__sub">Coloca o volume no máximo 🎵</p>
+    <button class="splash__btn" id="splash-btn" autofocus>
+      Clique para ver sua surpresa
+    </button>
+  </div>
+
+  <!-- ============================================================
+       CORAÇÕES FLUTUANTES (gerados pelo JS)
+       ============================================================ -->
+  <div id="hearts-bg" aria-hidden="true"></div>
+
+  <!-- ============================================================
+       BOTÃO FLUTUANTE DE ÁUDIO
+       ============================================================ -->
+  <button id="audio-btn" aria-label="Pausar música">
+    <!-- Ícone de alto-falante (tocando) -->
+    <svg id="icon-play" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+    </svg>
+    <!-- Ícone de mudo (pausado) — oculto por padrão -->
+    <svg id="icon-pause" viewBox="0 0 24 24" aria-hidden="true" style="display:none">
+      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+    </svg>
+  </button>
+
+  <!-- ============================================================
+       CONTEÚDO PRINCIPAL
+       ============================================================ -->
+  <main>
+
+    <!-- ----------------------------------------------------------
+         HERO SECTION
+         ---------------------------------------------------------- -->
+    <section class="hero" aria-label="Início">
+      <p class="hero__eyebrow">12 de Junho</p>
+      <h1 class="hero__title">
+        Feliz Dia dos<br><em>Namorados</em>
+      </h1>
+      <p class="hero__sub">Cada minuto contigo é o meu lugar favorito no mundo.</p>
+
+    </section>
+
+    <!-- ----------------------------------------------------------
+         SEÇÃO 1 — NOSSAS VIAGENS (3 fotos)
+         ---------------------------------------------------------- -->
+    <section class="section" aria-label="Nossas Viagens">
+      <div class="section__header reveal">
+        <p class="section__eyebrow">Momentos inesquecíveis</p>
+        <h2 class="section__title">Nossas Viagens</h2>
+        <div class="section__divider"></div>
+      </div>
+
+      <div class="grid-viagens">
+
+        <!-- FOTO 1 — Mãos dadas na água -->
+        <div class="photo-card reveal">
+          <!--
+            ► FOTO 1: Nossa foto de mãos dadas na água
+               Coloque o arquivo "viagem-maos-dadas.jpg" na mesma pasta do index.html
+               ou troque o src pelo caminho/URL correto.
+          -->
+          <img
+            class="photo-card__img"
+            src="viagem-maos-dadas.jpg"
+            alt="Nossas mãos dadas na água"
+            loading="lazy"
+          />
+          <div class="photo-card__caption">
+            <strong>Mãos dadas</strong>
+            <p>Juntos, a água parece mais azul e o mundo mais bonito.</p>
+          </div>
+        </div>
+
+        <!-- FOTO 2 — Abraço na lagoa -->
+        <div class="photo-card reveal">
+          <!--
+            ► FOTO 2: Nosso abraço perfeito na lagoa
+               Coloque o arquivo "viagem-abraco-lagoa.jpg" na mesma pasta do index.html
+               ou troque o src pelo caminho/URL correto.
+          -->
+          <img
+            class="photo-card__img"
+            src="viagem-abraco-lagoa.jpg"
+            alt="Nosso abraço perfeito na lagoa"
+            loading="lazy"
+          />
+          <div class="photo-card__caption">
+            <strong>O abraço perfeito</strong>
+            <p>Na lagoa, no calor, no melhor lugar — nos seus braços.</p>
+          </div>
+        </div>
+
+        <!-- FOTO 3 — Chapéu nos Lençóis -->
+        <div class="photo-card reveal">
+          <!--
+            ► FOTO 3: Nós dois sorrindo de chapéu nos Lençóis Maranhenses
+               Coloque o arquivo "viagem-chapeu-lencois.jpg" na mesma pasta do index.html
+               ou troque o src pelo caminho/URL correto.
+          -->
+          <img
+            class="photo-card__img"
+            src="viagem-chapeu-lencois.jpg"
+            alt="Nós dois sorrindo de chapéu nos Lençóis Maranhenses"
+            loading="lazy"
+          />
+          <div class="photo-card__caption">
+            <strong>Lençóis Maranhenses</strong>
+            <p>Dunas, água turquesa e você sorrindo. Perfeito.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------------
+         SEÇÃO 2 — NOSSOS ROLÊS INSALUBRES (2 fotos)
+         ---------------------------------------------------------- -->
+    <section class="section" aria-label="Nossos Rolês">
+      <div class="section__header reveal">
+        <p class="section__eyebrow">Do jeito que a gente gosta</p>
+        <h2 class="section__title">Nossos Rolês Insalubres</h2>
+        <div class="section__divider"></div>
+      </div>
+
+      <div class="grid-roles">
+
+        <!-- FOTO 4 — Selfie na festa -->
+        <div class="photo-card reveal">
+          <!--
+            ► FOTO 4: Selfie no meio da festa
+               Coloque o arquivo "role-selfie-festa.jpg" na mesma pasta do index.html
+               ou troque o src pelo caminho/URL correto.
+          -->
+          <img
+            class="photo-card__img"
+            src="role-selfie-festa.jpg"
+            alt="Selfie no meio da festa"
+            loading="lazy"
+          />
+          <div class="photo-card__caption">
+            <strong>Modo festa ativado</strong>
+            <p>Onde tiver uma pista, a gente tá lá.</p>
+          </div>
+        </div>
+
+        <!-- FOTO 5 — Selfie de rosto colado -->
+        <div class="photo-card reveal">
+          <!--
+            ► FOTO 5: Selfie de rosto colado
+               Coloque o arquivo "role-selfie-colados.jpg" na mesma pasta do index.html
+               ou troque o src pelo caminho/URL correto.
+          -->
+          <img
+            class="photo-card__img"
+            src="role-selfie-colados.jpg"
+            alt="Selfie de rosto colado"
+            loading="lazy"
+          />
+          <div class="photo-card__caption">
+            <strong>Colados do jeito certo</strong>
+            <p>Rosto no rosto, feliz demais.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------------
+         SEÇÃO FINAL — FOTO DO BEIJO NOS LENÇÓIS
+         ---------------------------------------------------------- -->
+    <div class="kiss-section" aria-label="Nossa foto especial">
+      <!--
+        ► FOTO PRINCIPAL (largura total):
+           Nossa foto dando um beijo na água nos Lençóis Maranhenses.
+           Coloque o arquivo "beijo-lencois.jpg" na mesma pasta do index.html
+           ou troque o src pelo caminho/URL correto.
+           Esta imagem ocupa 100% da largura da tela, perfeita para mobile.
+      -->
+      <img
+        class="kiss-section__img"
+        src="beijo-lencois.jpg"
+        alt="Nosso beijo na água dos Lençóis Maranhenses"
+        loading="lazy"
+      />
+      <div class="kiss-section__overlay" aria-hidden="true"></div>
+    </div>
+
+    <!-- ----------------------------------------------------------
+         LETRA DA MÚSICA — Planos, BK
+         ---------------------------------------------------------- -->
+    <div class="lyrics-section reveal" aria-label="Letra da música">
+      <p class="lyrics-section__label">Planos · BK</p>
+
+      <blockquote class="lyrics-section__quote">
+        você fala pra eu nunca te esquecer<br>
+        Mas olha só pra você<br>
+        Como me esquecer de você?<br>
+        Não quero promessas, eu quero viver<br>
+        E poder contar com você<br>
+        a grana que nós tiver
+      </blockquote>
+
+      <span class="lyrics-section__heart" aria-hidden="true">❤️</span>
+      <p class="lyrics-section__artist">com amor, Caio ❤️</p>
+    </div>
+
+  </main>
+
+  <!-- ============================================================
+       JAVASCRIPT
+       ============================================================ -->
+  <script>
+    /* -----------------------------------------------------------
+       SPLASH — ao clicar, some e inicia o áudio
+       ----------------------------------------------------------- */
+    const splash    = document.getElementById('splash');
+    const splashBtn = document.getElementById('splash-btn');
+    const audio     = document.getElementById('audio');
+    const audioBtn  = document.getElementById('audio-btn');
+    const iconPlay  = document.getElementById('icon-play');
+    const iconPause = document.getElementById('icon-pause');
+
+    splashBtn.addEventListener('click', () => {
+      // 1. Fade out do splash
+      splash.classList.add('hidden');
+
+      // 2. Inicia o áudio (precisa de gesto do usuário para funcionar no mobile)
+      audio.play().catch(() => {
+        // Alguns browsers ainda podem bloquear — o botão flutuante resolve
+      });
+
+      // 3. Mostra o botão de áudio
+      audioBtn.classList.add('visible');
+    });
+
+    /* -----------------------------------------------------------
+       BOTÃO FLUTUANTE DE ÁUDIO — play / pause
+       ----------------------------------------------------------- */
+    let tocando = true;
+
+    audioBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+        tocando = true;
+        iconPlay.style.display  = '';
+        iconPause.style.display = 'none';
+        audioBtn.setAttribute('aria-label', 'Pausar música');
+      } else {
+        audio.pause();
+        tocando = false;
+        iconPlay.style.display  = 'none';
+        iconPause.style.display = '';
+        audioBtn.setAttribute('aria-label', 'Tocar música');
+      }
+    });
+
+    /* -----------------------------------------------------------
+       CORAÇÕES FLUTUANTES
+       Cria N corações com tamanhos, posições e durações variadas
+       ----------------------------------------------------------- */
+    (function criarCoracoes() {
+      const container = document.getElementById('hearts-bg');
+      const total = 18;
+
+      for (let i = 0; i < total; i++) {
+        const h = document.createElement('span');
+        h.className  = 'fheart';
+        h.textContent = '❤';
+        h.setAttribute('aria-hidden', 'true');
+
+        const size     = Math.random() * 18 + 10;       // 10–28px
+        const left     = Math.random() * 100;            // % horizontal
+        const duration = Math.random() * 14 + 10;        // 10–24s
+        const delay    = Math.random() * 12;              // 0–12s
+
+        h.style.cssText = `
+          font-size: ${size}px;
+          left: ${left}vw;
+          animation-duration: ${duration}s;
+          animation-delay: -${delay}s;
+        `;
+        container.appendChild(h);
+      }
+    })();
+
+    /* -----------------------------------------------------------
+       SCROLL REVEAL — IntersectionObserver
+       ----------------------------------------------------------- */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 60);
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
