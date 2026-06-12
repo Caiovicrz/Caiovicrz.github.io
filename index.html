@@ -326,6 +326,13 @@
       display: block;
     }
 
+    /* Corrige orientação de imagens que carregaram rotacionadas */
+    .fix-rotate {
+      transform: rotate(-90deg);
+      transform-origin: center;
+      display: block;
+    }
+
     .photo-card__caption {
       padding: 0.9rem 1rem 1rem;
     }
@@ -589,7 +596,7 @@
                ou troque o src pelo caminho/URL correto.
           -->
           <img
-            class="photo-card__img"
+            class="photo-card__img fix-rotate"
             src="role-selfie-colados.jpg"
             alt="Selfie de rosto colado"
             loading="lazy"
@@ -662,13 +669,27 @@
       // 1. Fade out do splash
       splash.classList.add('hidden');
 
-      // 2. Inicia o áudio (precisa de gesto do usuário para funcionar no mobile)
-      audio.play().catch(() => {
-        // Alguns browsers ainda podem bloquear — o botão flutuante resolve
-      });
-
-      // 3. Mostra o botão de áudio
-      audioBtn.classList.add('visible');
+      // 2. Tenta iniciar o áudio (gesto do usuário deve permitir em muitos browsers)
+      audio.load();
+      audio.play()
+        .then(() => {
+          // Áudio iniciado com sucesso
+          tocando = true;
+          iconPlay.style.display  = '';
+          iconPause.style.display = 'none';
+          audioBtn.setAttribute('aria-label', 'Pausar música');
+        })
+        .catch(() => {
+          // Reprodução bloqueada — mostra botão de áudio em estado "pausado"
+          tocando = false;
+          iconPlay.style.display  = 'none';
+          iconPause.style.display = '';
+          audioBtn.setAttribute('aria-label', 'Tocar música');
+        })
+        .finally(() => {
+          // 3. Mostra o botão de áudio (em qualquer caso)
+          audioBtn.classList.add('visible');
+        });
     });
 
     /* -----------------------------------------------------------
